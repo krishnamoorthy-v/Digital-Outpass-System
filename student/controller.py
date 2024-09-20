@@ -1,97 +1,55 @@
 from django.db import IntegrityError
-from django.http import JsonResponse, HttpResponse
-from django.core import serializers
+from django.http import JsonResponse
 from .models import StudentModel
-from .validator import is_indian_mobile_number
-import json
+from .serializer import StudentSerializer
+from rest_framework.response import Response
+from rest_framework.views import status
+
+
 
 
 def insertOne(data):
     try:
-        mobile = [data["mobile"], data["parent_mobile"], data["guardian_mobile"]]
-
-        if not is_indian_mobile_number(mobile[0]):
-            raise Exception(f"Invalid mobile number {mobile[0]}")
-        if not is_indian_mobile_number(mobile[1]):
-            raise Exception(f"Invalid mobile number {mobile[1]}")
-        if not is_indian_mobile_number(mobile[2]):
-            raise Exception(f"Invalid mobile numbe {mobile[2]}r")
-
-        StudentModel(name=data["name"], email=data["email"], mobile=data["mobile"], profile=data["profile"],
-                     department=data["department"], parent_name=data["parent_name"],
-                     parent_mobile=data["parent_mobile"],
-                     guardian_name=data["guardian_name"], guardian_mobile=data["guardian_mobile"],
-                     home_addr=data["home_addr"]
-                     ).save()
-        return JsonResponse({"success": "Data Retrived Successfully"}, status=200)
+        serializer = StudentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": "Data stored Successfully"}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.error_messages, status=status.HTTP_409_CONFLICT)
     except IntegrityError as e:
-        return JsonResponse({"error": str(e.args[1]),
-                             "error_code": str(e.args[0])
-                             }, status=500)
+        return JsonResponse({"error": str(e.args[1]), "error_code": str(e.args[0])}, status=status.HTTP_409_CONFLICT)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def getOneByEmail(id):
     try:
         data = StudentModel.objects.get(email=id)
-        res = {
-            "id": data.pk,
-            "name": data.name,
-            "email": data.email,
-            "mobile": data.mobile,
-            "profile": data.profile,
-            "department": data.department,
-            "parent_name": data.parent_name,
-            "parent_mobile": data.parent_mobile,
-            "guardian_name": data.guardian_name,
-            "guardian_mobile": data.guardian_mobile,
-            "home_addr": data.home_addr
-        }
-
-        return JsonResponse(res, status=200)
+        res = StudentSerializer(data, many=False)
+        return Response(res.data, status=status.HTTP_200_OK)
     except Exception as e:
-        return JsonResponse({"error": str(e), "error_code": -1}, status=500)
+        return JsonResponse({"error": str(e), "error_code": -1}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def getOneById(id):
     try:
         data = StudentModel.objects.get(id=id)
-        res = {
-            "id": data.pk,
-            "name": data.name,
-            "email": data.email,
-            "mobile": data.mobile,
-            "profile": data.profile,
-            "department": data.department,
-            "parent_name": data.parent_name,
-            "parent_mobile": data.parent_mobile,
-            "guardian_name": data.guardian_name,
-            "guardian_mobile": data.guardian_mobile,
-            "home_addr": data.home_addr
-        }
-
-        return JsonResponse(res, status=200)
+        res = StudentSerializer(data, many=False)
+        return Response(res.data, status=status.HTTP_200_OK)
     except Exception as e:
-        return JsonResponse({"error": str(e), "error_code": -1}, status=500)
+        return JsonResponse({"error": str(e), "error_code": -1}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def updateOneById(id, data):
     try:
-        res = getOneById(id)
-        if res.status_code == 200:
-            data = StudentModel.objects.filter(id=id).update(
-                name=data["name"], email=data["email"], mobile=data["mobile"], profile=data["profile"],
-                department=data["department"], parent_name=data["parent_name"],
-                parent_mobile=data["parent_mobile"],
-                guardian_name=data["guardian_name"], guardian_mobile=data["guardian_mobile"],
-                home_addr=data["home_addr"]
-            )
-            return JsonResponse({"success": "Data updated"}, status=200)
+        if StudentModel.objects.filter(dept_id=id).update(**data):
+            return Response({"success": "updated successfully"}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({"error": "Id not found", "error_code": "-1"})
+            return Response({"failed": "Id not found"}, status=status.HTTP_400_BAD_REQUEST)
+    except IntegrityError as e:
+        return JsonResponse({"error": str(e.args[1]), "error_code": str(e.args[0])}, status=status.HTTP_409_CONFLICT)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def deleteOneById(pk):
@@ -99,26 +57,26 @@ def deleteOneById(pk):
         res = getOneById(pk)
         if res.status_code == 200:
             StudentModel.objects.get(id=pk).delete()
-            return JsonResponse({"success": "Data deleted"}, status=200)
+            return JsonResponse({"success": "Data deleted"}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({"error": "Data not available", "error_code": -1}, status=500)
+            return JsonResponse({"error": "Data not available", "error_code": -1}, status=status.HTTP_409_CONFLICT)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def getAll():
     try:
         all = StudentModel.objects.all()
-        data = serializers.serialize("json", all)
-        return HttpResponse(data, content_type='application/json', status=200)
+        data = StudentSerializer(all, many=True)
+        return Response(data.data, status=status.HTTP_200_OK)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def filter_Dpt_Wise(department):
     try:
         all = StudentModel.objects.filter(department=department)
-        data = serializers.serialize("json", all)
-        return HttpResponse(data, content_type='application/json')
+        data = StudentSerializer(all, many=True)
+        return Response(data.data, status=status.HTTP_200_OK)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

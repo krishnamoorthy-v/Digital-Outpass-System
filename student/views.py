@@ -1,63 +1,83 @@
 import json
-
-from django.http import HttpResponse, JsonResponse
-from django.middleware import csrf
-
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from .controller import insertOne, getOneByEmail, updateOneById, deleteOneById, getAll, filter_Dpt_Wise
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 # Create your views here.
 
-
+@api_view(["POST"])
+@permission_classes((AllowAny,))
 def setStudent(request):
-    if request.method == "POST":
-        res = insertOne(json.loads(request.body))
-        return res
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    '''
+    To insert the data into data base
+    :param request:
+    :return: status of the insert data
+    '''
+    res = insertOne(json.loads(request.body))
+    return res
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getStudent(request, email):
-    if request.method == "GET":
-        res = getOneByEmail(email)
-        return res
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
+    '''
+    To get one student who's matching the given email id
+    :param request:
+    :param email:
+    :return: json values
+    '''
+    res = getOneByEmail(email)
+    return res
 
 
-
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
 def updateStudent(request, pk):
-    if request.method == "PUT":
-        data = json.loads(request.body)
-        res = updateOneById(pk, data)
-        return res
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
+    '''
+    To update student info based on the id
+    :param request:
+    :param pk:
+    :return: updated info
+    '''
+    data = json.loads(request.body)
+    res = updateOneById(pk, data)
+    return res
 
 
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
 def deleteStudent(request, pk):
+    '''
+    To delete the student infor based on the id
+    :param request:
+    :param pk:
+    :return: status info
+    '''
+    res = deleteOneById(pk)
+    return res
 
-    if request.method == "DELETE":
-        res = deleteOneById(pk)
-        return res
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
 
-
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getAllStudent(request):
+    '''
+    to get list of all student from the db
+    :param request:
+    :return: list of json
+    '''
+    res = getAll()
+    return res
 
-    if request.method == "GET":
-        res = getAll()
-        return res
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
 
-
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getAllFromDpt(request, dpt):
-
-    if request.method == "GET":
-        res = filter_Dpt_Wise(dpt)
-        return res
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
+    '''
+    To get all student based on dept
+    :param request:
+    :param dpt:
+    :return: list of the json
+    '''
+    res = filter_Dpt_Wise(dpt)
+    return res

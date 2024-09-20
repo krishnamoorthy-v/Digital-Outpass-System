@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-b*-r3*a*wuj-=l!rft_@^j(-$98xb_)515zyvvd7vso-!3ng#w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.92.1', '127.0.0.1']
 
 
 # Application definition
@@ -38,13 +38,42 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'student',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'department',
+    'account'
+
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+# for reference use https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#access-token-lifetime
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+
+    #'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),  # The maximum lifetime of the refresh token, regardless of
+    # how many times it is used.
+    #'SLIDING_TOKEN_LIFETIME': timedelta(days=5),   # it extends the lifetime of refresh token when each time it extend
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+  #  'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -77,7 +106,7 @@ WSGI_APPLICATION = 'digitOutpassSystem.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dos',
+        'NAME': 'dos3',
         'USER': 'root',
         'PASSWORD': 'MYSQL',
         'HOST':'localhost',
@@ -126,3 +155,23 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#Enable or disable the CSRF
+CSRF_USE_SESSIONS = False
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "digitaloutpasssystem@gmail.com"
+EMAIL_HOST_PASSWORD = "fmqk kglx dlkq roht"
+
+#digitaloutpasssystem@gmail.com
+
+
+AUTHENTICATION_BACKENDS = [
+    'account.customauthlogin.CustomAuthLogin',  # Add your custom backend here
+    'django.contrib.auth.backends.ModelBackend',  # Keep the default one for other apps
+]
