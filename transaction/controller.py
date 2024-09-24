@@ -6,6 +6,7 @@ from .validation import Validation
 import datetime
 import re
 from student.models import StudentModel
+from django.core.paginator import Paginator
 
 validate = Validation()
 
@@ -64,7 +65,74 @@ def createController(data):
 
 def deleteAllController():
     try:
-        StudentModel.objects.filter().delete()
+        TransactionModel.objects.filter().delete()
         return Response({"success": "data deleted"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": e.args}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def getAllController():
+    try:
+        data = TransactionModel.objects.filter()
+        res = TransactionSerializer(data, many=True)
+        return Response(res.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def getOneController_t_id(id):
+    try:
+        # print(id)
+        data = TransactionModel.objects.filter(t_id=id)
+        # print(dir(data))
+        res = TransactionSerializer(data, many=True)
+        # print(res)
+        return Response(res.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
+
+
+def getAllControllerByStudId(id):
+    try:
+        data = TransactionModel.objects.filter(hostel_id=id)
+        res = TransactionSerializer(data, many=True)
+        return Response(res.data, status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
+
+
+def getAllControllerStatus(stat):
+    try:
+        data = TransactionModel.objects.filter(status=stat)
+        res = TransactionSerializer(data, many=True)
+        return Response(res.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
+
+
+def paginatorController(stats, entities, page):
+    try:
+        if stats in ["all", "pending", "failed", "completed", "success"]:
+            if stats == "all":
+                data = TransactionModel.objects.filter()
+            else:
+                data = TransactionModel.objects.filter(status=stats)
+        else:
+            raise Exception("Invalid status option ")
+        pages = Paginator(data, entities)
+        res = TransactionSerializer(pages.page(page), many=True)
+        return Response(res.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
+
+
+def updateStatusController(t_id, stats):
+    try:
+        if TransactionModel.objects.filter(t_id=t_id).update(status=stats):
+            return Response({"success": "status updated"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "transaction not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
+
+
