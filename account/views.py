@@ -18,15 +18,15 @@ from django.http import HttpResponse
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def signup(request, type):
+def signup(request):
     try:
         username = request.data.get("username")
         email = request.data.get("email")
         password = request.data.get("password")
-        user_type = type
+        user_type = "student"
         LoginModel.objects.create(username=username, email=email, password=password, user_type=user_type,
                                   is_active=True).save()
-        return Response({"Success:", "account created Successfully"}, status=status.HTTP_200_OK)
+        return Response({"Success": "account created Successfully"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error:", e.args}, status=status.HTTP_409_CONFLICT)
 

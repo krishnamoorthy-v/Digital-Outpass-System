@@ -37,12 +37,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'student',
     'rest_framework',
     'rest_framework_simplejwt',
     'department',
-    'account'
-
+    'account',
+    'warden',
+    "custom_utils",
+    "security",
+    "transaction"
 ]
 
 
@@ -77,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'digitOutpassSystem.urls'
@@ -174,4 +179,22 @@ EMAIL_HOST_PASSWORD = "fmqk kglx dlkq roht"
 AUTHENTICATION_BACKENDS = [
     'account.customauthlogin.CustomAuthLogin',  # Add your custom backend here
     'django.contrib.auth.backends.ModelBackend',  # Keep the default one for other apps
+]
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://192.168.92.110:3000",
+    # Add other origins as needed
+]
+
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies to be included in requests
+CORS_ALLOWED_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS'
 ]

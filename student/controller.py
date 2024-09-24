@@ -1,10 +1,10 @@
 from django.db import IntegrityError
 from django.http import JsonResponse
 from .models import StudentModel
-from .serializer import StudentSerializer
+from .serializer import StudentSerializer, StudentUpdateSerializer
 from rest_framework.response import Response
 from rest_framework.views import status
-
+from rest_framework.serializers import ValidationError
 
 
 
@@ -15,7 +15,7 @@ def insertOne(data):
             serializer.save()
             return Response({"success": "Data stored Successfully"}, status=status.HTTP_200_OK)
         else:
-            return Response(serializer.error_messages, status=status.HTTP_409_CONFLICT)
+            return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     except IntegrityError as e:
         return JsonResponse({"error": str(e.args[1]), "error_code": str(e.args[0])}, status=status.HTTP_409_CONFLICT)
     except Exception as e:
@@ -42,10 +42,15 @@ def getOneById(id):
 
 def updateOneById(id, data):
     try:
-        if StudentModel.objects.filter(dept_id=id).update(**data):
-            return Response({"success": "updated successfully"}, status=status.HTTP_200_OK)
+        serializer = StudentUpdateSerializer(data=data)
+        if serializer.is_valid():
+            print("hi")
+            if StudentModel.objects.filter(id=id).update(**data):
+                return Response({"success": "updated successfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"failed": "Id not found"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"failed": "Id not found"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except IntegrityError as e:
         return JsonResponse({"error": str(e.args[1]), "error_code": str(e.args[0])}, status=status.HTTP_409_CONFLICT)
     except Exception as e:

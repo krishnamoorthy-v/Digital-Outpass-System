@@ -19,7 +19,7 @@ def setStudent(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def getStudent(request, email):
     '''
     To get one student who's matching the given email id
@@ -32,7 +32,7 @@ def getStudent(request, email):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def updateStudent(request, pk):
     '''
     To update student info based on the id
@@ -46,7 +46,7 @@ def updateStudent(request, pk):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def deleteStudent(request, pk):
     '''
     To delete the student infor based on the id
@@ -59,7 +59,7 @@ def deleteStudent(request, pk):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def getAllStudent(request):
     '''
     to get list of all student from the db
@@ -71,7 +71,7 @@ def getAllStudent(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def getAllFromDpt(request, dpt):
     '''
     To get all student based on dept
