@@ -13,9 +13,8 @@ import datetime
 from .controller import generateToken
 from django.http import HttpResponse
 
+
 # Create your views here.
-
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def signup(request):
@@ -29,9 +28,6 @@ def signup(request):
         return Response({"Success": "account created Successfully"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error:", e.args}, status=status.HTTP_409_CONFLICT)
-
-
-
 
 
 @api_view(["POST"])
@@ -60,6 +56,7 @@ def login(request):
             return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         return Response({"error": e.args[0]}, status=status.HTTP_409_CONFLICT)
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -98,13 +95,13 @@ def password_reset_email(request, email):
         token = generateToken()
         # print("HI")
         records = PasswordResetModel.objects.filter(email=email)
-        if (len(records) == 0):
+        if len(records) == 0:
             print("token created")
             PasswordResetModel.objects.create(email=email, token=token).save()
         else:
             print("token updated")
             PasswordResetModel.objects.filter(email=email).update(token=token)
-        url = f"http://127.0.0.1:8000/account/auth/reset/{token}"
+        url = f"http://127.0.0.1:3000/account/auth/reset/{token}"
         send_mail(
             'DOS password reset',
             'click the below link for reset password ' + url,
@@ -123,18 +120,20 @@ def password_reset_email(request, email):
 def password_reset_confirm(request, token):
     try:
         password = request.data.get("password")
+        confirm_password = request.data.get("confirm_password")
+        if password != confirm_password:
+            raise Exception("Password and Confirm password not matching")
+
         token_obj = PasswordResetModel.objects.filter(token=token).first()
         # print( datetime.datetime.now().tzname(), " - token_obj.created_at")
         # print("datetime.datetime.now() -", token_obj.created_at.tzname())
         if token_obj and (
-                datetime.datetime.now().utcnow() - token_obj.created_at.utcnow()).total_seconds() < 60 * 60 * 60:
-            print("hi: ",token_obj.email)
+                datetime.datetime.now().utcnow() - token_obj.created_at.utcnow() ).total_seconds() < 60 * 60 * 60:
+            print("hi: ", token_obj.email)
             LoginModel.objects.filter(email=token_obj.email).update(password=password)
             token_obj.delete()
-            return Response({"success:", "password update"}, status=status.HTTP_200_OK)
+            return Response({"success": "password update"}, status=status.HTTP_200_OK)
         else:
-            return Response({"error:", "token expired"}, status=status.HTTP_408_REQUEST_TIMEOUT)
+            return Response({"error": "token expired"}, status=status.HTTP_408_REQUEST_TIMEOUT)
     except Exception as e:
-        return Response({"error:", e.args[0]}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        return Response({"error": e.args[0]}, status=status.HTTP_400_BAD_REQUEST)

@@ -40,6 +40,7 @@ def updateStudent(request, pk):
     :param pk:
     :return: updated info
     '''
+    print("hi")
     data = json.loads(request.body)
     res = updateOneById(pk, data)
     return res

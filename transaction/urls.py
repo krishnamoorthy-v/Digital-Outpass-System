@@ -9,5 +9,10 @@ urlpatterns = [
     path("getbystud/<int:id>", views.getByStudId),
     path("getstatus/<str:status>", views.getByStatus),
     path("paginator/<str:status>/<int:entries>/<int:page>", views.getBypage),
-    path("update/<int:t_id>/<str:stats>", views.updateStatus),
+    path("warden/update/<int:t_id>/<str:stats>", views.updateStatus),
+    path("qrcode/generating/<int:id>", views.getQrCode),
+    path("qrcode/verify", views.verifyQr),
+    path("getstatus/student/<int:stud_id>", views.getRequestStatus)
+
+
 ]

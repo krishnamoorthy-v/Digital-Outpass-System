@@ -50,7 +50,7 @@ def updateOneById(id, data):
             else:
                 return Response({"failed": "Id not found"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except IntegrityError as e:
         return JsonResponse({"error": str(e.args[1]), "error_code": str(e.args[0])}, status=status.HTTP_409_CONFLICT)
     except Exception as e:
