@@ -12,19 +12,27 @@ from .models import PasswordResetModel, LoginModel
 import datetime
 from .controller import generateToken
 from django.http import HttpResponse
+from argon2 import PasswordHasher
+import argon2
+
+ph = PasswordHasher()
 
 
 # Create your views here.
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def signup(request):
+def signup(request, usertype="student"):
     try:
-        username = request.data.get("username")
-        email = request.data.get("email")
-        password = request.data.get("password")
-        user_type = "student"
-        LoginModel.objects.create(username=username, email=email, password=password, user_type=user_type,
-                                  is_active=True).save()
+        if usertype.lower() in ["student", "warden", "security", "admin"]:
+            username = request.data.get("username")
+            email = request.data.get("email")
+            password = ph.hash(request.data.get("password"))
+            user_type = usertype
+
+            LoginModel.objects.create(username=username, email=email, password=password, user_type=user_type,
+                                      is_active=True).save()
+        else:
+            return Response({"failed": "invalid user type"})
         return Response({"Success": "account created Successfully"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error:", e.args}, status=status.HTTP_409_CONFLICT)
@@ -40,22 +48,32 @@ def login(request):
         data = LoginModel.objects.filter(email=email)
         res = LoginSerializer(data, many=True)
         # print(res.data[0]["email"])
+        if res.data:
 
-        user = LoginModel.objects.get(email=res.data[0]["email"])
-        if user.password != password:
-            raise serializers.ValidationError("invalid username or password")
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            login_serializer = LoginSerializer(user, many=False)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user': login_serializer.data
-            })
+            user = LoginModel.objects.get(email=res.data[0]["email"])
+
+            # print(user.password)
+
+            if user is not None and ph.verify(user.password, password):
+                request.session["login_id"] = user.id
+                request.session["email"] = user.email
+                request.session["user_type"] = user.user_type
+                request.session.set_expiry(60 * 60)
+
+                login_serializer = LoginSerializer(user, many=False)
+                print(login_serializer.data)
+                user = {
+                    "user": login_serializer.data
+                }
+                return Response(user, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+            raise Exception("Invalid email id")
+    except argon2.exceptions.VerifyMismatchError:
+        return Response({"error": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response({"error": e.args[0]}, status=status.HTTP_409_CONFLICT)
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
 
 
 @api_view(["POST"])
@@ -128,12 +146,26 @@ def password_reset_confirm(request, token):
         # print( datetime.datetime.now().tzname(), " - token_obj.created_at")
         # print("datetime.datetime.now() -", token_obj.created_at.tzname())
         if token_obj and (
-                datetime.datetime.now().utcnow() - token_obj.created_at.utcnow() ).total_seconds() < 60 * 60 * 60:
+                datetime.datetime.now().utcnow() - token_obj.created_at.utcnow()).total_seconds() < 60 * 60 * 60:
             print("hi: ", token_obj.email)
-            LoginModel.objects.filter(email=token_obj.email).update(password=password)
+            LoginModel.objects.filter(email=token_obj.email).update(password=ph.hash(password))
             token_obj.delete()
             return Response({"success": "password update"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "token expired"}, status=status.HTTP_408_REQUEST_TIMEOUT)
     except Exception as e:
         return Response({"error": e.args[0]}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["DELETE"])
+@permission_classes([AllowAny])
+def deleteByid(request, id):
+    try:
+        res = LoginModel.objects.filter(id=id).delete()
+
+        if res[0]:
+            return Response({"success": "data deleted"}, status=status.HTTP_200_OK)
+        else:
+            raise Exception("no data found")
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_400_BAD_REQUEST)

@@ -10,5 +10,5 @@ urlpatterns = [
     path('update/email/<str:email>', views.updateOneByEmail),
     path('delete/email/<str:email>', views.deleteOneByEmail),
     path('delete/id/<int:id>', views.deleteOneById),
-    path('delete/all', views.deleteAll)
+    path('delete/all', views.deleteAll),
 ]

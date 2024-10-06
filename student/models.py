@@ -12,10 +12,10 @@ class StudentModel(models.Model):
     department = models.CharField(max_length=20, blank=False, null=False)
 
     parent_name = models.CharField(max_length=30, blank=False, null=False)
-    parent_mobile = models.BigIntegerField(unique=True, null=False)
+    parent_mobile = models.BigIntegerField(null=False)
 
-    guardian_name = models.CharField(max_length=30, blank=True, null=True)
-    guardian_mobile = models.BigIntegerField(unique=True, null=True)
+    guardian_name = models.CharField(max_length=30, null=True, blank=True)
+    guardian_mobile = models.BigIntegerField(null=True, blank=True)
 
     home_addr = models.CharField(max_length=256, blank=False, null=False)
 

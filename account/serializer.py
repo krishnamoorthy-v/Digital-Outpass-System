@@ -38,10 +38,10 @@ class LoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoginModel
         fields = "__all__"
-
+        extra_kwargs = {'password': {'write_only': True}}
 
 def isValidRole(value):
-    roles = ["warden", "student", "security", "department"]
+    roles = ["warden", "student", "security", "department", "admin"]
     value = value.lower()
     if value not in roles:
         raise serializers.ValidationError("Invalid role")

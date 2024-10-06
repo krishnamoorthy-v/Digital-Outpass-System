@@ -3,7 +3,8 @@ from . import views
 
 urlpatterns = [
     path('create', views.setStudent, name="set_student_info"),
-    path('get/<str:email>', views.getStudent, name="get_student_info"),
+    path('get/email/<str:email>', views.getStudent, name="get_student_info"),
+    path('get/id/<int:id>', views.getStudentById),
     path('update/<int:pk>', views.updateStudent, name="update_student_info"),
     path('delete/<int:pk>', views.deleteStudent, name="delete_student"),
     path('getall', views.getAllStudent, name="get_all_student"),

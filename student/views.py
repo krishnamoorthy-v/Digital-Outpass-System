@@ -1,5 +1,5 @@
 import json
-from .controller import insertOne, getOneByEmail, updateOneById, deleteOneById, getAll, filter_Dpt_Wise
+from .controller import insertOne, getOneByEmail, getOneById, updateOneById, deleteOneById, getAll, filter_Dpt_Wise
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
@@ -14,7 +14,10 @@ def setStudent(request):
     :param request:
     :return: status of the insert data
     '''
-    res = insertOne(json.loads(request.body))
+    print(request.data)
+    if request.data["guardian_mobile"] == "":
+        request.data["guardian_mobile"] = None
+    res = insertOne(request.data)
     return res
 
 
@@ -30,6 +33,12 @@ def getStudent(request, email):
     res = getOneByEmail(email)
     return res
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getStudentById(reqeust, id):
+
+    res = getOneById(id)
+    return res
 
 @api_view(["PUT"])
 @permission_classes([AllowAny])

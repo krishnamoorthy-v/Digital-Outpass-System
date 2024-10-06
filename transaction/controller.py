@@ -9,6 +9,7 @@ import re
 from student.models import StudentModel
 from django.core.paginator import Paginator
 from .services import generateQrCode
+import json
 
 validate = Validation()
 
@@ -137,6 +138,18 @@ def getAllControllerStatus(stats):
         return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
 
 
+def getAcceptedT_id(stud_id):
+    try:
+        data = TransactionModel.objects.filter(hostel_id=stud_id).filter(status="accepted")
+        res = TransactionSerializer(data, many=True)
+        if res.data:
+            return Response(res.data, status=status.HTTP_200_OK)
+        else:
+            raise Exception("Warden not accepted you invitation")
+    except Exception as e:
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)
+
+
 def paginatorController(stats, entities, page):
     try:
         if stats in ["all", "pending", "rejected", "completed", "accepted"]:
@@ -194,11 +207,13 @@ def generateQrController(t_id):
                 info, qr_base64 = generateQrCode(serializer.data, 60)
                 print(info)
                 if TransactionModel.objects.filter(t_id=t_id).filter(status="accepted").update(token=info["token"],
-                                                                                               qr_code_base_64=qr_base64):
+                                                                                               qr_code_base_64=qr_base64,
+                                                                                               token_expire=info[
+                                                                                                   "expire"]):
                     print("Log: Transaction Controller qr code updated on table")
                 else:
                     print("Log: Transaction Controller qr not updated on table")
-            return Response({"success": qr_base64}, status=status.HTTP_200_OK)
+            return Response({"QRcode": qr_base64}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Warden not allowed you to go out"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -206,25 +221,38 @@ def generateQrController(t_id):
         return Response({"error": e.args}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def verifyQrController(data):
+def verifyQrController(info):
     try:
-        if TransactionModel.objects.filter(token=data["token"]).filter(status="accepted"):
-            if datetime.datetime.strptime(data["expire"],"%Y-%m-%d %H:%M:%S.%f").time() < datetime.datetime.today().time():
+
+        data = TransactionModel.objects.filter(token=info["token"]).filter(status="accepted")
+        res = TransactionSerializer(data, many=True)
+        all_data = res.data
+
+        if all_data:
+            # print(data)
+            data = all_data[0]
+            print(data)
+            print(datetime.datetime.strptime(data["token_expire"],
+                                             "%Y-%m-%dT%H:%M:%S.%fZ").time(), '<', datetime.datetime.today().time())
+            if datetime.datetime.strptime(data["token_expire"],
+                                          "%Y-%m-%dT%H:%M:%S.%fZ").time() > datetime.datetime.today().time():
                 raise Exception("Qr code Expired")
 
             else:
-                TransactionModel.objects.filter(token=data["token"]).update(actual_out_time=str(datetime.datetime.now(datetime.UTC)))
+                TransactionModel.objects.filter(token=data["token"]).update(
+                    actual_out_time=str(datetime.datetime.now(datetime.UTC)))
                 TransactionModel.objects.filter(token=data["token"]).update(status="check_out")
 
             return Response({"success": "Verified to Out"}, status=status.HTTP_200_OK)
 
-        elif TransactionModel.objects.filter(token=data["token"]).filter(status="check_out"):
-            TransactionModel.objects.filter(token=data["token"]).update(actual_in_time=str(datetime.datetime.now(datetime.UTC)))
-            TransactionModel.objects.filter(token=data["token"]).update(status="check_in")
+        elif TransactionModel.objects.filter(token=info["token"]).filter(status="check_out"):
+            TransactionModel.objects.filter(token=info["token"]).update(
+                actual_in_time=str(datetime.datetime.now(datetime.UTC)))
+            TransactionModel.objects.filter(token=info["token"]).update(status="check_in")
             return Response({"success": "Verified to In"}, status=status.HTTP_200_OK)
 
         else:
             raise Exception("Not Allowed to out")
 
     except Exception as e:
-        return Response({"error": e.args})
+        return Response({"error": e.args}, status=status.HTTP_409_CONFLICT)

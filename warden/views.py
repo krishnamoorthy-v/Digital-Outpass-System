@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from .controller import createController, readAllController, readOneControllerEmail, readOneControllerId, \
+from .controller import createWardenWithLoginController, readAllController, readOneControllerEmail, readOneControllerId, \
     updateOneControllerId, updateOneControllerEmail, deleteOneControllerId, deleteOneControllerEmail, \
     deleteAllController
 from .models import WardenModel
@@ -14,7 +14,7 @@ from .serializer import WardenSerializer
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create(request):
-    res = createController(request.data)
+    res = createWardenWithLoginController(request.data)
     return res
 
 
@@ -31,6 +31,13 @@ def readOneByEmail(reqeust, email):
     res = readOneControllerEmail(email)
     return res
 
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def readOneByEmailSession(request):
+    email = request.session.get("email")
+    res = readOneControllerEmail(email)
+    return res
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -72,3 +79,6 @@ def deleteOneByEmail(request, email):
 def deleteAll(request):
     res = deleteAllController()
     return res
+
+
+

@@ -1,7 +1,7 @@
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from .controller import createController, readAllController, readOneControllerEmail, readOneControllerId, \
+from .controller import createSecurityWithLoginController, readAllController, readOneControllerEmail, readOneControllerId, \
     updateOneControllerId, updateOneControllerEmail, deleteOneControllerId, deleteOneControllerEmail, \
     deleteAllController
 from .models import SecurityModel
@@ -13,7 +13,7 @@ from .serializer import SecuritySerializer
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create(request):
-    res = createController(request.data)
+    res = createSecurityWithLoginController(request.data)
     return res
 
 

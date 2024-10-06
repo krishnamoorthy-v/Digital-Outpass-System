@@ -25,6 +25,7 @@ class TransactionModel(models.Model):
     actual_in_time = models.DateTimeField(null=True)
     actual_out_time = models.DateTimeField(null=True)
     token = models.CharField(max_length=130, null=True)
+    token_expire = models.DateTimeField(null=True)
     qr_code_base_64 = models.TextField(null=True)
 
     class Meta:

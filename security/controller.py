@@ -4,7 +4,12 @@ from rest_framework.serializers import ValidationError
 from .models import SecurityModel
 from .serializer import SecuritySerializer
 from .validation import Validation
-
+from account.serializer import SignupSerializer
+from account.models import LoginModel
+from account.views import signup
+from argon2 import PasswordHasher
+import argon2
+ph = PasswordHasher()
 
 def createController(data):
     try:
@@ -16,6 +21,62 @@ def createController(data):
             return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def createSecurityWithLoginController(data):
+    res = []
+    try:
+        data["name"] = data["username"]
+        data["is_active"] = True
+        if data["secondary_number"] == "":
+            data["secondary_number"] = None
+        data["password"] = ph.hash(data.get("password"))
+        serializer = SecuritySerializer(data=data)
+        signUpSerializer = SignupSerializer(data=data)
+        print(data)
+
+        if serializer.is_valid() and signUpSerializer.is_valid():
+
+            if data["user_type"].lower() in ["security"]:
+
+                signup_object = signUpSerializer.save()
+                print("res", res)
+                res.append({"signup": signup_object})
+                warden_object = serializer.save()
+
+                res.append({"warden": warden_object})
+
+            else:
+                return Response({"failed": "invalid user type"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"Success": "account created Successfully"}, status=status.HTTP_200_OK)
+
+        else:
+            l = serializer.errors.keys()
+            for i in l:
+                raise Exception(i + " " + serializer.errors.get(i)[0])
+
+            l = signUpSerializer.errors.keys()
+            for i in l:
+                raise Exception(i + " " + signUpSerializer.errors.get(i)[0])
+
+        return Response({"success": "Data stored"}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        if res:
+            print(dir(res[0]["signup"]))
+            # print(res[0]["signup"].id)
+            if res[0]["signup"]:
+                id = res[0]["signup"].id
+                print(id)
+                LoginModel.objects.filter(id=id).delete()
+                print("deleted successfully")
+            else:
+                id = res[0]["signup"].id
+                SecurityModel.objects.filter(id=id).delete()
+
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 def readAllController():

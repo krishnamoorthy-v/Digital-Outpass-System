@@ -13,9 +13,17 @@ def validate_mobileNum(data):
         raise serializers.ValidationError("Invalid mobile number")
     return data
 
+def validate_mobileNum2(data):
+    print("from validation 2", data)
+    pattern = r'^[6-9]\d{9}$'
+    match = re.match(pattern, str(data))
+    if not match:
+        raise serializers.ValidationError("Invalid mobile number")
+    return data
 
 def validate_base64(value):
     try:
+        print("from base 64 validation")
         base64.b64decode(value, validate=True)
         return value
     except Exception:
@@ -31,7 +39,7 @@ def validate_email(value):
 class StudentSerializer(serializers.ModelSerializer):
     mobile = serializers.CharField(max_length=10, validators=[validate_mobileNum])
     parent_mobile = serializers.CharField(max_length=10, validators=[validate_mobileNum])
-    guardian_mobile = serializers.CharField(max_length=10, validators=[validate_mobileNum])
+    guardian_mobile = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=10, validators=[validate_mobileNum2])
     profile = serializers.CharField(required=False, validators=[validate_base64])
 
     class Meta:
@@ -42,7 +50,7 @@ class StudentSerializer(serializers.ModelSerializer):
 class StudentUpdateSerializer(serializers.ModelSerializer):
     mobile = serializers.CharField(max_length=10, validators=[validate_mobileNum])
     parent_mobile = serializers.CharField(max_length=10, validators=[validate_mobileNum])
-    guardian_mobile = serializers.CharField(max_length=10, validators=[validate_mobileNum])
+    guardian_mobile = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=10, validators=[validate_mobileNum2])
     profile = serializers.CharField(required=False, validators=[validate_base64])
     # email = serializers.EmailField(required=False, validators=[lambda value: validate_email(value, StudentUpdateSerializer)])
     email = serializers.EmailField(required=False)

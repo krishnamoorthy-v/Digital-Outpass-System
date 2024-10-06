@@ -48,7 +48,7 @@ def generateQrCode(data, seconds=40):
     token = generate_hash(str(data))
     info = {
         "token": token,
-        "expire": str(datetime.datetime.now() + datetime.timedelta(seconds=seconds))
+        "expire": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=seconds)
     }
-    generateQRImage(info, token)
+    generateQRImage(token, token)
     return info, convert_image_to_base64(f"{path}\\{token}.png")

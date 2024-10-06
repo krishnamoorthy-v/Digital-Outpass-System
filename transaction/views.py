@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from .controller import createController, deleteAllController, getAllController, getOneController_t_id, \
-    getAllControllerByStudId, getAllControllerStatus, paginatorController, updateStatusController, generateQrController, getAllControllerRequestStatus, verifyQrController, wardenResController
+    getAllControllerByStudId, getAllControllerStatus, paginatorController, updateStatusController, generateQrController, getAllControllerRequestStatus, verifyQrController, wardenResController, getAcceptedT_id
 
 # Create your views here.
 
@@ -17,7 +17,7 @@ def create(request):
 
 @api_view(["DELETE"])
 @permission_classes([AllowAny])
-def delete(request):
+def deleteAll(request):
     res = deleteAllController()
     return res
 
@@ -40,6 +40,12 @@ def getByt_id(request, id):
 @permission_classes([AllowAny])
 def getRequestStatus(request, stud_id):
     res = getAllControllerRequestStatus(stud_id)
+    return res
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getAcceptIdStud(request, stud_id):
+    res = getAcceptedT_id(stud_id)
     return res
 
 @api_view(["GET"])

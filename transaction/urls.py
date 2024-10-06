@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path("create", views.create),
-    path("deleteall", views.delete),
+    path("deleteall", views.deleteAll),
     path("getall", views.getAll),
     path("getbyid/<int:id>", views.getByt_id),
     path("getbystud/<int:id>", views.getByStudId),
@@ -12,7 +12,8 @@ urlpatterns = [
     path("warden/update/<int:t_id>/<str:stats>", views.updateStatus),
     path("qrcode/generating/<int:id>", views.getQrCode),
     path("qrcode/verify", views.verifyQr),
-    path("getstatus/student/<int:stud_id>", views.getRequestStatus)
+    path("getstatus/student/<int:stud_id>", views.getRequestStatus),
+    path("get/t_id/student/<int:stud_id>", views.getAcceptIdStud),
 
 
 ]
