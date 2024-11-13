@@ -28,7 +28,7 @@ def createController(data):
                                           "%Y-%m-%dT%H:%M:%SZ").date() == datetime.datetime.today().date():
                 count += 1
                 print(count)
-            if count > 2:
+            if count > 0:
                 raise Exception("today out pass limit exceeds")
 
         validate.validate_date(data["in_time"])

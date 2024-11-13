@@ -119,7 +119,7 @@ def password_reset_email(request, email):
         else:
             print("token updated")
             PasswordResetModel.objects.filter(email=email).update(token=token)
-        url = f"http://127.0.0.1:3000/account/auth/reset/{token}"
+        url = f"http://192.168.63.110:3000/account/auth/reset/{token}"
         send_mail(
             'DOS password reset',
             'click the below link for reset password ' + url,
